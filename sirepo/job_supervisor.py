@@ -94,7 +94,7 @@ class _Job(PKDict):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.compute_hash = self.req.content.compute_hash
+        self.compute_hash = None
         self.compute_status = None
         self.jid = self._jid_for_req(self.req)
         self.instances[self.jid] = self
@@ -107,7 +107,10 @@ class _Job(PKDict):
             i = self.get_job_info(req)
             res = PKDict(state=i.job_status)
             # TODO(e-carlin):  Job is not processing then send result op
-            if i.job_status in (sirepo.job.Status.COMPLETED.value, sirepo.job.Status.ERROR.value):
+            # TODO(e-carlin): handle forceRun
+            if i.job_status in \
+                (sirepo.job.Status.COMPLETED.value, sirepo.job.Status.ERROR.value) \
+                    and not i.parameters_changed:
                 res = (await self.get_result(req)).output.result
             # TODO(e-carlin): handle parallel
             res.setdefault('startTime', self.start_time)

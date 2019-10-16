@@ -125,4 +125,5 @@ def _request_body(kwargs):
         ('run_dir', lambda: str(simulation_db.simulation_run_dir(d))),
     ):
         b[k] = d[k] if k in d else v()
+    pkdp('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ compute_hash={}', b.compute_hash)
     return b

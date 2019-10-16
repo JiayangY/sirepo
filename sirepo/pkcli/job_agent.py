@@ -29,7 +29,6 @@ import tornado.process
 import tornado.queues
 import tornado.websocket
 
-
 #: Long enough for job_process to write result in run_dir
 _TERMINATE_SECS = 3
 
@@ -48,7 +47,6 @@ _STATUS_FILE_COMMON = PKDict(version=1)
 _EXEC_ENV_REMOVE = re.compile('^(OMPI_|PMIX_|SIREPO_|PYKERN_)')
 
 cfg = None
-
 
 def default_command():
     os.environ['PYKERN_PKDEBUG_OUTPUT'] = '/dev/tty'
@@ -184,6 +182,7 @@ class _Process(PKDict):
                         compute_status=job.Status.COMPLETED.value,
                     )
                 elif self.msg.job_process_cmd == 'compute_status':
+                    pkdp('########################## compute_hash={}', o.compute_hash)
                     await self.comm.write_message(
                         self.msg,
                         job.OP_COMPUTE_STATUS,
