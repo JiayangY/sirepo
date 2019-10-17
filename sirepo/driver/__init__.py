@@ -65,6 +65,10 @@ class DriverBase(PKDict):
         await self.send_lock.acquire()
         # TODO(e-carlin): Clunky to have send_lock and handler_set
         await self._handler_set.wait()
+        if 'data' in m:
+            pkdp('7777777777777777777777777777777777')
+            pkdp(m.data.models.dog.weight)
+            pkdp('7777777777777777777777777777777777')
         await self._handler.write_message(pkjson.dump_bytes(m))
         r = await o.get_result()
         self.send_lock.release()
@@ -102,13 +106,9 @@ class DriverBase(PKDict):
                         msg.get(key) if msg.get(key) is not None else getattr(j, key)
                     )
                 if jid == j.jid:
-                    pkdp('**************************************************')
-                    pkdp('original compute_hash={}', j.compute_hash)
                     setdefault('compute_hash')
                     setdefault('compute_status')
                     setdefault('last_update_time')
-                    pkdp('updated compute_hash={}', j.compute_hash)
-                    pkdp('**************************************************')
                     return
 
 

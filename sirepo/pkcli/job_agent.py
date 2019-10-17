@@ -182,7 +182,6 @@ class _Process(PKDict):
                         compute_status=job.Status.COMPLETED.value,
                     )
                 elif self.msg.job_process_cmd == 'compute_status':
-                    pkdp('########################## compute_hash={}', o.compute_hash)
                     await self.comm.write_message(
                         self.msg,
                         job.OP_COMPUTE_STATUS,
@@ -263,6 +262,11 @@ class _Comm(PKDict):
                         pkdlog('error={}', e)
                         break
                     m = await c.read_message()
+                    r = pkjson.load_any(m)
+                    if r.op == 'run':
+                        pkdp('2222222222222222222222222222222')
+                        pkdp(r.data.models.dog.weight)
+                        pkdp('2222222222222222222222222222222')
                     pkdc('msg={}', job.LogFormatter(m))
                     if m is None:
                         break
