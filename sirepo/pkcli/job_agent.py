@@ -262,11 +262,6 @@ class _Comm(PKDict):
                         pkdlog('error={}', e)
                         break
                     m = await c.read_message()
-                    r = pkjson.load_any(m)
-                    if r.op == 'run':
-                        pkdp('2222222222222222222222222222222')
-                        pkdp(r.data.models.dog.weight)
-                        pkdp('2222222222222222222222222222222')
                     pkdc('msg={}', job.LogFormatter(m))
                     if m is None:
                         break

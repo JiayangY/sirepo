@@ -106,14 +106,10 @@ class _Job(PKDict):
             # TODO(e-carlin): This only works for compute_jobs now. What about analysis jobs?
             i = self.get_job_info(req)
             res = PKDict(state=i.job_status)
-            pkdp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1')
-            pkdp(i)
-            pkdp('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1')
             # TODO(e-carlin):  Job is not processing then send result op
             if i.job_status in \
                 (sirepo.job.Status.COMPLETED.value, sirepo.job.Status.ERROR.value) \
                 and not i.parameters_changed:
-                pkdp('888888888888888888888888888 getting result')
                 res = (await self.get_result(req)).output.result
             # TODO(e-carlin): handle parallel
             res.setdefault('parametersChanged', i.parameters_changed)
@@ -169,6 +165,7 @@ class _Job(PKDict):
         self = cls.instances.get(cls._jid_for_req(req))
         if not self:
             self = cls(req=req)
+        self.req = req
         if self.compute_status is not None:
             return await self.get_response(req)
         d = await sirepo.driver.get_instance_for_job(self)
@@ -185,6 +182,7 @@ class _Job(PKDict):
         self = cls.instances.get(cls._jid_for_req(req))
         if not self:
             self = cls(req=req)
+        self.req = req
         d = await sirepo.driver.get_instance_for_job(self)
         # TODO(e-carlin): all other methods return self.get_response() this returns
         # the raw response. Is there a way to change this?
@@ -199,31 +197,21 @@ class _Job(PKDict):
         # TODO(e-carlin): handle forceRun
         # TODO(e-carlin): handle parametersChanged
         s = await _Job.get_compute_status(req)
-        pkdp('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        pkdp(s)
-        pkdp('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
         if s.state not in sirepo.job.ALREADY_GOOD_STATUS or s.parametersChanged:
-            pkdp('99999999999999999999999999999 running job')
             self = cls.instances.get(cls._jid_for_req(req))
             if not self:
                 self = cls(req=req)
+            self.req = req # if self then must overwrite existing req
             d = await sirepo.driver.get_instance_for_job(self)
             # TODO(e-carlin): handle error response from do_op
             self.start_time = time.time()
             self.last_update_time = time.time()
-            pkdp('555555555555555555555555555555555')
-            # import copy
-            # p = copy.deepcopy(req.content)
-            p = req.content
-            # pkdp(req.content.data)
-            pkdp(p.data.models.dog.weight)
-            pkdp('555555555555555555555555555555555')
             await d.do_op(
                 op=sirepo.job.OP_RUN,
                 jid=self.req.compute_jid,
                 evan='was here',
-                # **self.req.content,
-                **p,
+                **self.req.content,
+                # **p,
             )
         self = cls.instances.get(cls._jid_for_req(req))
         assert self is not None

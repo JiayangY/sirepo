@@ -125,8 +125,4 @@ def _request_body(kwargs):
         ('run_dir', lambda: str(simulation_db.simulation_run_dir(d))),
     ):
         b[k] = d[k] if k in d else v()
-    if 'models' in b.data:
-        pkdp('33333333333333333333333333333333')
-        pkdp(b.data.models.dog.weight)
-        pkdp('33333333333333333333333333333333')
     return b
