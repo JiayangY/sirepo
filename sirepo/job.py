@@ -18,6 +18,7 @@ import re
 
 OP_ANALYSIS = 'analysis'
 OP_CANCEL = 'cancel'
+OP_CANCEL_DUE_TO_TIMEOUT = 'cancel_due_to_timeout'
 OP_ERROR = 'error'
 OP_KILL = 'kill'
 OP_OK = 'ok'

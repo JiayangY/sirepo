@@ -60,13 +60,23 @@ class DriverBase(PKDict):
             **self
         )
 
-    def cancel_op(self, op):
+    def cancel_op(self, op, send_cancel=False):
+        def send_cancel(o):
+            try:
+                self.websocket.write_message(pkjson.dump_bytes(PKDict(
+                    opName=job.OP_CANCEL_DUE_TO_TIMEOUT,
+                    opId=o.opId,
+                )))
+            except Exception as e:
+                pkdlog('error={} stack={}', e, pkdexc())
         for o in self.ops_pending_send:
             if o == op:
                 op.do_not_send = True
                 return
         for o in self.ops_pending_done.values():
             if o == op:
+                if send_cancel:
+                    send_cancel(o)
                 op.do_not_send = True
                 return
 #rjn is this a valid assumption?

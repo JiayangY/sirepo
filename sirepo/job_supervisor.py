@@ -66,7 +66,7 @@ def init():
     _DB_DIR = sirepo.srdb.root().join(_DB_SUBDIR)
     cfg = pkconfig.init(
         parallel=dict(
-            max_hours=(1, float, 'maximum run-time for parallel job (except sbatch)'),
+            max_hours=(.001, float, 'maximum run-time for parallel job (except sbatch)'),
         ),
         sbatch_poll_secs=(60, int, 'how often to poll squeue and parallel status'),
         sequential=dict(
@@ -361,21 +361,6 @@ class _ComputeJob(PKDict):
             try:
                 while True:
                     r = await op.reply_ready()
-                    if r.state == job.CANCELED:
-                        break
-                    self.db.status = r.state
-                    if self.db.status == job.ERROR:
-                        self.db.error = r.get('error', '<unknown error>')
-                    if 'computeJobStart' in r:
-                        self.db.computeJobStart = r.computeJobStart
-                    if 'parallelStatus' in r:
-                        self.db.parallelStatus.update(r.parallelStatus)
-                        self.db.lastUpdateTime = r.parallelStatus.lastUpdateTime
-                    else:
-                        # sequential jobs don't send this
-                        self.db.lastUpdateTime = int(time.time())
-                        #TODO(robnagler) will need final frame count
-                    self.__db_write()
                     if r.state in job.EXIT_STATUSES:
                         break
             except Exception as e:
@@ -456,10 +441,13 @@ class _Op(PKDict):
         return r
 
     def run_timeout(self):
-        if self.canceled or self.errored:
+        if self.do_not_send:
             return
         pkdlog('opId={opId} opName={opName} maxRunSecs={maxRunSecs}', **self)
-        self.set_canceled()
+        self.set_errored(
+            'timeout={} met while waiting on response'.format(self.maxRunSecs),
+            True,
+        )
 
     def set_canceled(self):
         self.do_not_send = True
@@ -467,13 +455,14 @@ class _Op(PKDict):
         self.send_ready.set()
         self.driver.cancel_op(self)
 
-    def set_errored(self, error):
+    def set_errored(self, error, send_cancel=False):
         self.do_not_send = True
-        self.send_ready.set()
         self.reply_put(
             PKDict(state=job.ERROR, error=error),
         )
         self.send_ready.set()
+        if send_cancel:
+            self.driver.cancel_op(self, send_cancel)
 
     async def send(self):
         await self.driver.send(self)

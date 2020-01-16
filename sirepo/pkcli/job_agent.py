@@ -206,11 +206,22 @@ class _Dispatcher(PKDict):
                 c.destroy()
         return None
 
+    async def _op_cancel_due_to_timeout(self, msg):
+        for c in self.cmds:
+            if c.msg.get('opId') == msg.opId:
+                c.destroy
+                break
+        else:
+            assert 0  # TODO(e-carlin): remove, just for testing
+            pkdlog('opId={} not found in cmds={}', msg.opId, self.cmds)
+        return None
+
     async def _op_kill(self, msg):
         self.terminate()
         return None
 
     async def _op_run(self, msg):
+        await tornado.gen.sleep(666)
         return await self._cmd(msg)
 
     async def _op_sbatch_login(self, msg):
